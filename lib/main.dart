@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genreguesser/home.dart';
+import 'package:genreguesser/theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-      ),
+      title: 'Genrle',
+      theme: GlobalTheme().globalTheme,
       home: HomePage(),
     );
   }

@@ -13,20 +13,21 @@ class Quiz extends StatefulWidget {
 }
 
 class _QuizState extends State<Quiz> {
-  int? selectedOptionIndex;
   bool? answerCorrect;
   bool answered = false;
+  Option? selectedOption;
   QuizService quizService = QuizService();
   QuizItem currentQuizItem = QuizItem.init();
 
   @override
   void initState() {
+    super.initState();
     getNextQuestion();
   }
 
   void getNextQuestion() {
     setState(() {
-      selectedOptionIndex = null;
+      selectedOption = null;
       answerCorrect = null;
       answered = false;
       currentQuizItem = quizService.get();
@@ -34,35 +35,58 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget quizImage(QuestionImage questionImage) {
-    return Column(
-      children: [
-        Image.network(questionImage.src),
-        Text(questionImage.title),
-        Text(questionImage.subTitle)
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        height: 250,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Image.network(
+              questionImage.src,
+              width: 200,
+            ),
+            Text(questionImage.title),
+            Text(questionImage.subTitle)
+          ],
+        ),
+      ),
     );
   }
 
   Widget quizQuestion(Question question) {
-    return Column(
-      children: [
-        Text(question.text),
-        ListView.builder(
-            shrinkWrap: true,
-            itemCount: question.options.length,
-            itemBuilder: (BuildContext context, int index) => TextButton(
-                child: Text(question.options[index].text),
-                style: TextButton.styleFrom(
-                  backgroundColor: buttonColor(question.options[index]),
-                ),
-                onPressed: () => handleOptionClick(index, question.options)))
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Text("Q: ${question.text}"),
+          SizedBox(
+            height: 16,
+          ),
+          Column(
+              children: question.options
+                  .map((option) => TextButton(
+                      child: Text(option.text),
+                      style: TextButton.styleFrom(
+                          backgroundColor: buttonColor(option),
+                          elevation:
+                              selectedOption != null && selectedOption == option
+                                  ? 0
+                                  : 4,
+                          side:
+                              selectedOption != null && selectedOption == option
+                                  ? BorderSide(color: Colors.white)
+                                  : BorderSide()),
+                      onPressed: () => handleOptionClick(option)))
+                  .toList()),
+        ],
+      ),
     );
   }
 
   Color buttonColor(Option option) {
     if (!answered) {
-      return Colors.black;
+      return Colors.amberAccent;
     } else if (option.correct) {
       return Colors.green;
     } else {
@@ -70,10 +94,10 @@ class _QuizState extends State<Quiz> {
     }
   }
 
-  void handleOptionClick(int optionIndex, List<Option> options) {
+  void handleOptionClick(Option option) {
     setState(() {
-      selectedOptionIndex = optionIndex;
-      answerCorrect = options[optionIndex].correct;
+      selectedOption = option;
+      answerCorrect = option.correct;
       answered = true;
     });
   }
@@ -89,10 +113,12 @@ class _QuizState extends State<Quiz> {
         child: Column(
       children: [
         quizItemDisplay(currentQuizItem),
-        TextButton(
-          onPressed: answered ? getNextQuestion : null,
-          child: const Text("Next question"),
-        )
+        answered
+            ? TextButton(
+                onPressed: getNextQuestion,
+                child: const Text("Next question"),
+              )
+            : SizedBox()
       ],
     ));
   }

@@ -12,8 +12,15 @@ class HomePage extends StatelessWidget {
         actions: [
           Row(
             children: [
-              Text("user#1234"),
-              Icon(Icons.account_circle),
+              Text(
+                "user#1234",
+                style: TextStyle(color: Theme.of(context).primaryColorLight),
+              ),
+              SizedBox(width: 10),
+              Icon(
+                Icons.account_circle,
+                color: Theme.of(context).primaryColorLight,
+              ),
             ],
           )
         ],

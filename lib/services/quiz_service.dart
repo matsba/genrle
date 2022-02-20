@@ -25,7 +25,7 @@ class QuizService {
           subTitle: "The Poacher Diaries Redux"),
       Question("This band is from USA. Whats the genre?", [
         Option("Post-Hardcore", correct: true),
-        Option("Technical Death Metal"),
+        Option("Surf Rock"),
         Option("J-POP")
       ]),
     )

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:genreguesser/models/option.dart';
-import 'package:genreguesser/models/question.dart';
-import 'package:genreguesser/models/question_image.dart';
-import 'package:genreguesser/models/quiz_item.dart';
-import 'package:genreguesser/services/quiz_service.dart';
+import 'package:genrle/models/option.dart';
+import 'package:genrle/models/question.dart';
+import 'package:genrle/models/question_image.dart';
+import 'package:genrle/models/quiz_item.dart';
+import 'package:genrle/services/quiz_service.dart';
 
 class Quiz extends StatefulWidget {
   const Quiz({Key? key}) : super(key: key);
@@ -42,9 +42,25 @@ class _QuizState extends State<Quiz> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Image.network(
-              questionImage.src,
-              width: 200,
+            SizedBox(
+              height: 200,
+              child: Image.network(
+                questionImage.src,
+                height: 200,
+                fit: BoxFit.fill,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              ),
             ),
             Text(questionImage.title),
             Text(questionImage.subTitle)

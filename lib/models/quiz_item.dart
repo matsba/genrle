@@ -1,5 +1,5 @@
-import 'package:genreguesser/models/question_image.dart';
-import 'package:genreguesser/models/question.dart';
+import 'package:genrle/models/question_image.dart';
+import 'package:genrle/models/question.dart';
 
 class QuizItem {
   QuestionImage image;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:genreguesser/components/quiz.dart';
+import 'package:genrle/components/quiz.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);

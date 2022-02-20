@@ -1,7 +1,7 @@
-import 'package:genreguesser/models/option.dart';
-import 'package:genreguesser/models/question_image.dart';
-import 'package:genreguesser/models/question.dart';
-import 'package:genreguesser/models/quiz_item.dart';
+import 'package:genrle/models/option.dart';
+import 'package:genrle/models/question_image.dart';
+import 'package:genrle/models/question.dart';
+import 'package:genrle/models/quiz_item.dart';
 
 class QuizService {
   int lastReturnedMockIndex = 0;
@@ -9,9 +9,9 @@ class QuizService {
   List<QuizItem> quizItems = [
     QuizItem(
       QuestionImage(
-          src: "https://f4.bcbits.com/img/a3622621927_9.jpg",
-          title: "Moksha",
-          subTitle: "THE LAST OF LUCY"),
+          src: "https://www.metal-archives.com/images/9/9/3/3/993371.jpg?3311",
+          title: "THE LAST OF LUCY",
+          subTitle: "Moksha"),
       Question("Whats the genre?", [
         Option("Pop"),
         Option("Technical Death Metal", correct: true),

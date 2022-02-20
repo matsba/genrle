@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:genreguesser/home.dart';
-import 'package:genreguesser/theme.dart';
+import 'package:genrle/home.dart';
+import 'package:genrle/theme.dart';
 
 void main() {
   runApp(const MyApp());

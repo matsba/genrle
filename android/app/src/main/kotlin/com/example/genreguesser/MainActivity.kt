@@ -1,4 +1,4 @@
-package com.example.genreguesser
+package com.example.genrle
 
 import io.flutter.embedding.android.FlutterActivity
 

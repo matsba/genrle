@@ -2,9 +2,11 @@ import 'package:genrle/models/option.dart';
 import 'package:genrle/models/question_image.dart';
 import 'package:genrle/models/question.dart';
 import 'package:genrle/models/quiz_item.dart';
+import 'package:genrle/services/user_service.dart';
 
 class QuizService {
   int lastReturnedMockIndex = 0;
+  UserService _userService = UserService();
 
   List<QuizItem> quizItems = [
     QuizItem(
@@ -33,5 +35,9 @@ class QuizService {
   QuizItem get() {
     if (lastReturnedMockIndex > quizItems.length - 1) lastReturnedMockIndex = 0;
     return quizItems[lastReturnedMockIndex++];
+  }
+
+  Future<void> answer() async {
+    await _userService.incrementPointsBy(2);
   }
 }

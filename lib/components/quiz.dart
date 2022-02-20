@@ -1,39 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:genrle/models/answer.dart';
 import 'package:genrle/models/option.dart';
 import 'package:genrle/models/question.dart';
 import 'package:genrle/models/question_image.dart';
 import 'package:genrle/models/quiz_item.dart';
-import 'package:genrle/services/quiz_service.dart';
+import 'package:genrle/redux/middleware.dart';
+import 'package:genrle/redux/state.dart';
 
-class Quiz extends StatefulWidget {
-  const Quiz({Key? key}) : super(key: key);
-
-  @override
-  _QuizState createState() => _QuizState();
-}
-
-class _QuizState extends State<Quiz> {
-  bool? answerCorrect;
-  bool answered = false;
-  Option? selectedOption;
-  QuizService quizService = QuizService();
-  QuizItem currentQuizItem = QuizItem.init();
-
-  @override
-  void initState() {
-    super.initState();
-    getNextQuestion();
-  }
-
-  void getNextQuestion() {
-    setState(() {
-      selectedOption = null;
-      answerCorrect = null;
-      answered = false;
-      currentQuizItem = quizService.get();
-    });
-  }
-
+class Quiz extends StatelessWidget {
   Widget quizImage(QuestionImage questionImage) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -70,6 +45,34 @@ class _QuizState extends State<Quiz> {
     );
   }
 
+  Widget _optionButton(Option option) {
+    Color buttonColor(
+      Answer answer,
+    ) {
+      if (answer == Answer.NotAnswered) {
+        return Colors.amberAccent;
+      } else if (option.correct) {
+        return Colors.green;
+      } else {
+        return Colors.red;
+      }
+    }
+
+    return StoreConnector<AppState, _OptionButtonViewModel>(
+        converter: (store) => _OptionButtonViewModel(
+            selectedOption: store.state.selectedOption,
+            answer: store.state.answer,
+            answerQuestion: (value) => store.dispatch(answerQuestion(value))),
+        builder: (context, vm) {
+          return TextButton(
+              child: Text(option.text),
+              style: TextButton.styleFrom(
+                backgroundColor: buttonColor(vm.answer),
+              ),
+              onPressed: () => vm.answerQuestion(option));
+        });
+  }
+
   Widget quizQuestion(Question question) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -81,41 +84,11 @@ class _QuizState extends State<Quiz> {
           ),
           Column(
               children: question.options
-                  .map((option) => TextButton(
-                      child: Text(option.text),
-                      style: TextButton.styleFrom(
-                          backgroundColor: buttonColor(option),
-                          elevation:
-                              selectedOption != null && selectedOption == option
-                                  ? 0
-                                  : 4,
-                          side:
-                              selectedOption != null && selectedOption == option
-                                  ? BorderSide(color: Colors.white)
-                                  : BorderSide()),
-                      onPressed: () => handleOptionClick(option)))
+                  .map((option) => _optionButton(option))
                   .toList()),
         ],
       ),
     );
-  }
-
-  Color buttonColor(Option option) {
-    if (!answered) {
-      return Colors.amberAccent;
-    } else if (option.correct) {
-      return Colors.green;
-    } else {
-      return Colors.red;
-    }
-  }
-
-  void handleOptionClick(Option option) {
-    setState(() {
-      selectedOption = option;
-      answerCorrect = option.correct;
-      answered = true;
-    });
   }
 
   Widget quizItemDisplay(QuizItem item) {
@@ -126,16 +99,47 @@ class _QuizState extends State<Quiz> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        child: Column(
-      children: [
-        quizItemDisplay(currentQuizItem),
-        answered
-            ? TextButton(
-                onPressed: getNextQuestion,
-                child: const Text("Next question"),
-              )
-            : SizedBox()
-      ],
-    ));
+      child: StoreConnector<AppState, _QuizViewModel>(
+          converter: (store) => _QuizViewModel(
+                answer: store.state.answer,
+                quizItem: store.state.quizItem,
+                getNextQuestion: () => store.dispatch(getQuestion()),
+              ),
+          builder: (context, vm) {
+            return Column(
+              children: [
+                quizItemDisplay(vm.quizItem),
+                vm.answer != Answer.NotAnswered
+                    ? TextButton(
+                        onPressed: vm.getNextQuestion,
+                        child: const Text("Next question"),
+                      )
+                    : SizedBox()
+              ],
+            );
+          }),
+    );
   }
+}
+
+class _OptionButtonViewModel {
+  Option? selectedOption;
+  Answer answer;
+  final void Function(Option) answerQuestion;
+
+  _OptionButtonViewModel(
+      {required this.selectedOption,
+      required this.answerQuestion,
+      required this.answer});
+}
+
+class _QuizViewModel {
+  QuizItem quizItem;
+  Answer answer;
+  final void Function() getNextQuestion;
+
+  _QuizViewModel(
+      {required this.quizItem,
+      required this.answer,
+      required this.getNextQuestion});
 }

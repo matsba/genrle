@@ -1,37 +1,37 @@
-import 'dart:math';
 import 'package:genrle/models/user.dart';
+import 'package:genrle/util/http_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
-  register() async {
-    var _prefs = await SharedPreferences.getInstance();
-    _prefs.setString("username", createTempUser());
-  }
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  String createTempUser() {
-    return "User#${Random().nextInt(5)}";
-  }
+  Future<User> _register(HttpService http) async {
+    final storage = await _prefs;
+    await storage.clear();
+    var response = await http.postRequest("/user/register", null);
 
-  Future<User> get() async {
-    var _prefs = await SharedPreferences.getInstance();
-    var username = _prefs.getString("username");
-    int? points = _prefs.getInt("points");
-
-    if (username == null || username.isEmpty) {
-      register();
-      username = _prefs.getString("username");
+    if (response == null) {
+      throw "Registartion failed!";
     }
 
-    if (points == null) {
-      _prefs.setInt("points", 0);
-    }
+    var user = User.fromJson(response);
 
-    return User(username!, points ?? 0);
+    storage.setString("userId", user.id);
+    return user;
   }
 
-  Future<void> incrementPointsBy(int points) async {
-    var _prefs = await SharedPreferences.getInstance();
-    User user = await get();
-    _prefs.setInt("points", user.points + points);
+  Future<User> get(HttpService http) async {
+    var response = await http.getRequest("/user");
+
+    if (response == null) {
+      User registeredUser = await _register(http);
+      return registeredUser;
+    } else {
+      return User.fromJson(response);
+    }
+  }
+
+  Future<void> incrementPoints(HttpService http) async {
+    await http.putRequest("/user/update/score", {"points": "3"});
   }
 }

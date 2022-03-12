@@ -5,10 +5,19 @@ import 'package:genrle/redux/middleware.dart';
 import 'package:genrle/redux/reducer.dart';
 import 'package:genrle/redux/state.dart';
 import 'package:genrle/theme.dart';
+import 'package:genrle/util/environment.dart';
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  const String environment = String.fromEnvironment(
+    'ENVIRONMENT',
+    defaultValue: Environment.DEV,
+  );
+
+  Environment().initConfig(environment);
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   final store = Store<AppState>(reducer,

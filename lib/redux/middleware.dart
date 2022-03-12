@@ -4,15 +4,17 @@ import 'package:genrle/redux/actions.dart';
 import 'package:genrle/redux/state.dart';
 import 'package:genrle/services/quiz_service.dart';
 import 'package:genrle/services/user_service.dart';
+import 'package:genrle/util/http_service.dart';
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
 
 UserService _userService = UserService();
 QuizService _quizService = QuizService();
+HttpService httpClient = HttpService();
 
 ThunkAction<AppState> getUser() {
   return (Store<AppState> store) async {
-    var user = await _userService.get();
+    var user = await _userService.get(httpClient);
 
     store.dispatch(GetUserAction(user));
   };
@@ -21,10 +23,10 @@ ThunkAction<AppState> getUser() {
 ThunkAction<AppState> answerQuestion(Option option) {
   return (Store<AppState> store) async {
     if (option.correct) {
-      await _userService.incrementPointsBy(2);
+      await _userService.incrementPoints(httpClient);
     }
 
-    var user = await _userService.get();
+    var user = await _userService.get(httpClient);
 
     store.dispatch(AnswerQustionAction(
         user: user,

@@ -47,3 +47,7 @@ app.*.map.json
 
 
 app-release-to-dropbox.ps1
+
+# Backend
+/backend/.build
+/backend/node_modules

@@ -3,10 +3,12 @@ import 'package:genrle/models/question_image.dart';
 import 'package:genrle/models/question.dart';
 import 'package:genrle/models/quiz_item.dart';
 import 'package:genrle/services/user_service.dart';
+import 'package:genrle/util/http_service.dart';
 
 class QuizService {
   int lastReturnedMockIndex = 0;
   UserService _userService = UserService();
+  HttpService httpClient = HttpService();
 
   List<QuizItem> quizItems = [
     QuizItem(
@@ -38,6 +40,6 @@ class QuizService {
   }
 
   Future<void> answer() async {
-    await _userService.incrementPointsBy(2);
+    await _userService.incrementPoints(httpClient);
   }
 }

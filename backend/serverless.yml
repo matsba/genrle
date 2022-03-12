@@ -1,0 +1,83 @@
+service: genrle-backend
+frameworkVersion: "3"
+
+useDotenv: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-north-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchWriteItem
+            - dynamodb:BatchGetItem
+          Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/*"
+  environment:
+    DYNAMODB_NAMESPACE: ${opt:stage, "dev"}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+
+functions:
+  getUser:
+    handler: src/controllers/userController.get
+    events:
+      - http:
+          path: user
+          method: get
+          authorizer:
+            name: authorizerFunc
+            type: request
+  createUser:
+    handler: src/controllers/userController.register
+    events:
+      - http:
+          path: user/register
+          method: post
+  getLatestQuiz:
+    handler: src/controllers/quizController.getLatest
+    events:
+      - http:
+          path: quiz/latest
+          method: get
+          authorizer:
+            name: authorizerFunc
+            type: request
+  answerQuiz:
+    handler: src/controllers/quizController.answer
+    events:
+      - http:
+          path: quiz/answer
+          method: post
+          authorizer:
+            name: authorizerFunc
+            type: request
+  authorizerFunc:
+    handler: src/services/authorizer.handler
+resources:
+  Resources:
+    EntitiesTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:service}-${self:provider.environment.DYNAMODB_NAMESPACE}-entities

@@ -28,6 +28,17 @@ provider:
   environment:
     DYNAMODB_NAMESPACE: ${opt:stage, "dev"}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  apiGateway:
+    apiKeys:
+      - value: salainen #${env:MY_API_KEY}
+    usagePlan:
+      quota:
+        limit: 5000
+        offset: 2
+        period: MONTH
+      throttle:
+        burstLimit: 200
+        rateLimit: 100
 
 functions:
   getUser:
@@ -63,8 +74,24 @@ functions:
           authorizer:
             name: authorizerFunc
             type: request
+  createQuiz:
+    handler: src/controllers/quizController.create
+    events:
+      - http:
+          path: quiz/create
+          method: post
+          #private: true
+  getAllQuizes:
+    handler: src/controllers/quizController.getAll
+    events:
+      - http:
+          path: quiz
+          method: get
+          #private: true
+
   authorizerFunc:
     handler: src/services/authorizer.handler
+
 resources:
   Resources:
     EntitiesTable:

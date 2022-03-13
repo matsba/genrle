@@ -24,6 +24,25 @@ export class HttpHelper {
     return requestContext.authorizer.principalId;
   }
 
+  static successResponse(body?: any) {
+    if (body) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify(body),
+      };
+    }
+    return {
+      statusCode: 204,
+    };
+  }
+
+  static internalServerErrorResponse(message: string) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify(message),
+    };
+  }
+
   static forbiddenResponse() {
     return {
       statusCode: 403,

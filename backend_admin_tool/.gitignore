@@ -44,11 +44,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-
-app-release-to-dropbox.ps1
-
-# Backend
-/backend/.build
-/backend/node_modules
-/backend/.env

@@ -1,10 +1,21 @@
 import { APIGatewayProxyEvent, Handler } from "aws-lambda";
-import { QuizItem, QuizService } from "../services/quizService";
+import {
+  GetAllQuizItemsStructure,
+  Question,
+  QuestionImage,
+  QuizItem,
+  QuizService,
+} from "../services/quizService";
 import { HttpHelper } from "../util/httpHelper";
 
 interface AnswerRequest {
   quizId: string;
   optionText: string;
+}
+
+interface CreateRequest {
+  questionImage: QuestionImage;
+  question: Question;
 }
 
 export const getLatest: Handler = async (event: APIGatewayProxyEvent) => {
@@ -22,6 +33,12 @@ export const getLatest: Handler = async (event: APIGatewayProxyEvent) => {
   };
 };
 
+export const getAll: Handler = async (event: APIGatewayProxyEvent) => {
+  const quizItems: GetAllQuizItemsStructure = await QuizService.getAll();
+
+  return HttpHelper.successResponse(quizItems);
+};
+
 export const answer: Handler = async (event: APIGatewayProxyEvent) => {
   const userId = HttpHelper.getAuthorizedUser(event.requestContext);
 
@@ -37,5 +54,27 @@ export const answer: Handler = async (event: APIGatewayProxyEvent) => {
         statusCode: 500,
       };
     }
+  }
+};
+
+export const create: Handler = async (event: APIGatewayProxyEvent) => {
+  console.log(event.body);
+  if (event.body != null) {
+    try {
+      console.log("Parsing json..");
+      const quizItem: QuizItem = JSON.parse(event.body);
+      console.log(`Parsed! ${quizItem}`);
+
+      console.log("Creating item...");
+      await QuizService.create(quizItem);
+      console.log("Success!");
+
+      return HttpHelper.successResponse();
+    } catch (error) {
+      console.error(error);
+      HttpHelper.internalServerErrorResponse((error as Error).message);
+    }
+  } else {
+    return HttpHelper.badRequestResponse();
   }
 };

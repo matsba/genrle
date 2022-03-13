@@ -1,17 +1,16 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { dynamoDbClient, getTableName } from "../util/dynamodbClient";
 import { v4 } from "uuid";
-import { AWSError } from "aws-sdk";
+import { dynamoDbClient, getTableName } from "../util/dynamodbClient";
 import { AnswerService } from "./answerService";
 import { UserService } from "./userService";
 
-interface QuestionImage {
+export interface QuestionImage {
   src: string;
   title: string;
   subTitle: string;
 }
 
-interface Question {
+export interface Question {
   text: string;
   options: Option[];
 }
@@ -24,13 +23,40 @@ interface Option {
 export interface QuizItem {
   id: string;
   created: string;
-  questionImage: QuestionImage;
+  image: QuestionImage;
   question: Question;
 }
 
+export interface GetAllQuizItemsStructure {
+  count: number;
+  quizItems: QuizItem[];
+}
+
+interface QuizItemDatabaseItem {
+  PK: string;
+  SK: string;
+  image: QuestionImage;
+  question: Question;
+  EntityType: "QuizItem";
+  createdTime: string;
+}
+
+const mapFromDatabase = (databaseEntry: DocumentClient.AttributeMap) => {
+  const items: QuizItem[] = databaseEntry.Items.map(
+    (x: QuizItemDatabaseItem) =>
+      ({
+        id: x.PK,
+        created: x.createdTime,
+        image: x.image,
+        question: x.question,
+      } as QuizItem),
+  );
+  return items;
+};
+
 export class QuizService {
   static async getLatest(): Promise<QuizItem | null> {
-    const databaseEnry: DocumentClient.AttributeMap = await dynamoDbClient
+    const databaseEntry: DocumentClient.AttributeMap = await dynamoDbClient
       .scan({
         TableName: getTableName(),
         ConsistentRead: false,
@@ -45,22 +71,24 @@ export class QuizService {
       })
       .promise();
 
-    if (databaseEnry.Count < 1) {
+    if (databaseEntry.Count < 1) {
       return null;
     }
 
-    const quizItem: QuizItem = {
-      id: databaseEnry.Items[0].PK,
-      created: databaseEnry.Items[0].SK,
-      questionImage: databaseEnry.Items[0].questionImage,
-      question: databaseEnry.Items[0].question,
-    };
+    const quizItem = mapFromDatabase(databaseEntry)[0];
+
+    // const quizItem: QuizItem = {
+    //   id: databaseEntry.Items[0].PK,
+    //   created: databaseEntry.Items[0].createdTime,
+    //   image: databaseEntry.Items[0].image,
+    //   question: databaseEntry.Items[0].question,
+    // };
 
     return quizItem;
   }
 
   static async get(quizId: string): Promise<QuizItem | null> {
-    const databaseEnry: DocumentClient.AttributeMap = await dynamoDbClient
+    const databaseEntry: DocumentClient.AttributeMap = await dynamoDbClient
       .query({
         TableName: getTableName(),
         ScanIndexForward: true,
@@ -75,18 +103,31 @@ export class QuizService {
       })
       .promise();
 
-    if (databaseEnry.Count < 1) {
+    if (databaseEntry.Count < 1) {
       return null;
     }
 
-    const quizItem: QuizItem = {
-      id: databaseEnry.Items[0].PK,
-      created: databaseEnry.Items[0].SK,
-      questionImage: databaseEnry.Items[0].questionImage,
-      question: databaseEnry.Items[0].question,
-    };
+    const quizItem = mapFromDatabase(databaseEntry)[0];
 
     return quizItem;
+  }
+
+  static async getAll(): Promise<GetAllQuizItemsStructure> {
+    const databaseEntry: DocumentClient.AttributeMap = await dynamoDbClient
+      .scan({
+        TableName: getTableName(),
+        FilterExpression: "begins_with(#e14e0, :e14e0)",
+        ExpressionAttributeNames: { "#e14e0": "PK" },
+        ExpressionAttributeValues: { ":e14e0": "QUIZ" },
+      })
+      .promise();
+
+    if (databaseEntry.Count < 1) {
+      return { count: 0, quizItems: [] };
+    }
+
+    const quizItems = mapFromDatabase(databaseEntry);
+    return { count: databaseEntry.Count, quizItems: quizItems };
   }
 
   static async answer(
@@ -115,5 +156,25 @@ export class QuizService {
       );
       await AnswerService.insert(userId, quizItem, option);
     }
+  }
+
+  static async create(quizItem: QuizItem) {
+    const timeNow = new Date().toISOString();
+
+    const insertItem: QuizItemDatabaseItem = {
+      PK: `QUIZITEM#${v4()}`,
+      SK: timeNow.split("T")[0],
+      EntityType: "QuizItem",
+      createdTime: timeNow,
+      image: quizItem.image,
+      question: quizItem.question,
+    };
+
+    await dynamoDbClient
+      .put({
+        TableName: getTableName(),
+        Item: insertItem,
+      })
+      .promise();
   }
 }
